@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 
+#include <cblas.h>
+
 #include "caffe/caffe.hpp"
 #include "caffe_mobile.hpp"
 
@@ -26,6 +28,13 @@ string jstring2string(JNIEnv *env, jstring jstr) {
   string str(cstr);
   env->ReleaseStringUTFChars(jstr, cstr);
   return str;
+}
+
+JNIEXPORT void JNICALL
+Java_com_sh1r0_caffe_1android_1lib_CaffeMobile_setNumThreads(
+    JNIEnv *env, jobject thiz, jint numThreads) {
+  int num_threads = numThreads;
+  openblas_set_num_threads(num_threads);
 }
 
 JNIEXPORT void JNICALL
