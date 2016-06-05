@@ -24,11 +24,11 @@ public:
 
   void SetScale(const float scale);
 
-  vector<float> GetConfidenceScore(const string &img_path);
+  vector<float> GetConfidenceScore(const cv::Mat &img);
 
-  vector<int> PredictTopK(const string &img_path, int k);
+  vector<int> PredictTopK(const cv::Mat &img, int k);
 
-  vector<vector<float>> ExtractFeatures(const string &img_path,
+  vector<vector<float>> ExtractFeatures(const cv::Mat &img,
                                         const string &str_blob_names);
 
 private:
@@ -42,7 +42,7 @@ private:
 
   void WrapInputLayer(std::vector<cv::Mat> *input_channels);
 
-  vector<float> Forward(const string &filename);
+  vector<float> Forward(const cv::Mat &img);
 
   shared_ptr<Net<float>> net_;
   cv::Size input_geometry_;

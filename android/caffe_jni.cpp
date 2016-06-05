@@ -6,6 +6,10 @@
 
 #include <cblas.h>
 
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+
 #include "caffe/caffe.hpp"
 #include "caffe_mobile.hpp"
 
@@ -28,6 +32,29 @@ string jstring2string(JNIEnv *env, jstring jstr) {
   string str(cstr);
   env->ReleaseStringUTFChars(jstr, cstr);
   return str;
+}
+
+/**
+ * NOTE: byte[] buf = str.getBytes("US-ASCII")
+ */
+string bytes2string(JNIEnv *env, jbyteArray buf) {
+  jbyte *ptr = env->GetByteArrayElements(buf, 0);
+  string s((char *)ptr, env->GetArrayLength(buf));
+  env->ReleaseByteArrayElements(buf, ptr, 0);
+  return s;
+}
+
+cv::Mat imgbuf2mat(JNIEnv *env, jbyteArray buf, int width, int height) {
+  jbyte *ptr = env->GetByteArrayElements(buf, 0);
+  cv::Mat img(height + height / 2, width, CV_8UC1, (unsigned char *)ptr);
+  cv::cvtColor(img, img, CV_YUV2RGBA_NV21);
+  env->ReleaseByteArrayElements(buf, ptr, 0);
+  return img;
+}
+
+cv::Mat getImage(JNIEnv *env, jbyteArray buf, int width, int height) {
+  return (width == 0 && height == 0) ? cv::imread(bytes2string(env, buf), -1)
+                                     : imgbuf2mat(env, buf, width, height);
 }
 
 JNIEXPORT void JNICALL
@@ -71,12 +98,16 @@ JNIEXPORT void JNICALL Java_com_sh1r0_caffe_1android_1lib_CaffeMobile_setScale(
   caffe_mobile->SetScale(scale);
 }
 
+/**
+ * NOTE: when width == 0 && height == 0, buf is a byte array
+ * (str.getBytes("US-ASCII")) which contains the img path
+ */
 JNIEXPORT jfloatArray JNICALL
 Java_com_sh1r0_caffe_1android_1lib_CaffeMobile_getConfidenceScore(
-    JNIEnv *env, jobject thiz, jstring imgPath) {
+    JNIEnv *env, jobject thiz, jbyteArray buf, jint width, jint height) {
   CaffeMobile *caffe_mobile = CaffeMobile::Get();
   vector<float> conf_score =
-      caffe_mobile->GetConfidenceScore(jstring2string(env, imgPath));
+      caffe_mobile->GetConfidenceScore(getImage(env, buf, width, height));
 
   jfloatArray result;
   result = env->NewFloatArray(conf_score.size());
@@ -88,14 +119,17 @@ Java_com_sh1r0_caffe_1android_1lib_CaffeMobile_getConfidenceScore(
   return result;
 }
 
+/**
+ * NOTE: when width == 0 && height == 0, buf is a byte array
+ * (str.getBytes("US-ASCII")) which contains the img path
+ */
 JNIEXPORT jintArray JNICALL
-Java_com_sh1r0_caffe_1android_1lib_CaffeMobile_predictImage(JNIEnv *env,
-                                                            jobject thiz,
-                                                            jstring imgPath,
-                                                            jint k) {
+Java_com_sh1r0_caffe_1android_1lib_CaffeMobile_predictImage(
+    JNIEnv *env, jobject thiz, jbyteArray buf, jint width, jint height,
+    jint k) {
   CaffeMobile *caffe_mobile = CaffeMobile::Get();
   vector<int> top_k =
-      caffe_mobile->PredictTopK(jstring2string(env, imgPath), k);
+      caffe_mobile->PredictTopK(getImage(env, buf, width, height), k);
 
   jintArray result;
   result = env->NewIntArray(k);
@@ -107,12 +141,17 @@ Java_com_sh1r0_caffe_1android_1lib_CaffeMobile_predictImage(JNIEnv *env,
   return result;
 }
 
+/**
+ * NOTE: when width == 0 && height == 0, buf is a byte array
+ * (str.getBytes("US-ASCII")) which contains the img path
+ */
 JNIEXPORT jobjectArray JNICALL
 Java_com_sh1r0_caffe_1android_1lib_CaffeMobile_extractFeatures(
-    JNIEnv *env, jobject thiz, jstring imgPath, jstring blobNames) {
+    JNIEnv *env, jobject thiz, jbyteArray buf, jint width, jint height,
+    jstring blobNames) {
   CaffeMobile *caffe_mobile = CaffeMobile::Get();
   vector<vector<float>> features = caffe_mobile->ExtractFeatures(
-      jstring2string(env, imgPath), jstring2string(env, blobNames));
+      getImage(env, buf, width, height), jstring2string(env, blobNames));
 
   jobjectArray array2D =
       env->NewObjectArray(features.size(), env->FindClass("[F"), NULL);

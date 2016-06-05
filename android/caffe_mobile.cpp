@@ -190,9 +190,8 @@ void CaffeMobile::WrapInputLayer(std::vector<cv::Mat> *input_channels) {
   }
 }
 
-vector<float> CaffeMobile::Forward(const string &filename) {
-  cv::Mat img = cv::imread(filename, -1);
-  CHECK(!img.empty()) << "Unable to decode image " << filename;
+vector<float> CaffeMobile::Forward(const cv::Mat &img) {
+  CHECK(!img.empty()) << "img should not be empty";
 
   Blob<float> *input_layer = net_->input_blobs()[0];
   input_layer->Reshape(1, num_channels_, input_geometry_.height,
@@ -218,20 +217,20 @@ vector<float> CaffeMobile::Forward(const string &filename) {
   return vector<float>(begin, end);
 }
 
-vector<float> CaffeMobile::GetConfidenceScore(const string &img_path) {
-  return Forward(img_path);
+vector<float> CaffeMobile::GetConfidenceScore(const cv::Mat &img) {
+  return Forward(img);
 }
 
-vector<int> CaffeMobile::PredictTopK(const string &img_path, int k) {
-  const vector<float> probs = Forward(img_path);
+vector<int> CaffeMobile::PredictTopK(const cv::Mat &img, int k) {
+  const vector<float> probs = Forward(img);
   k = std::min<int>(std::max(k, 1), probs.size());
   return argmax(probs, k);
 }
 
 vector<vector<float>>
-CaffeMobile::ExtractFeatures(const string &img_path,
+CaffeMobile::ExtractFeatures(const cv::Mat &img,
                              const string &str_blob_names) {
-  Forward(img_path);
+  Forward(img);
 
   vector<std::string> blob_names;
   boost::split(blob_names, str_blob_names, boost::is_any_of(","));
@@ -266,7 +265,7 @@ int main(int argc, char const *argv[]) {
   CaffeMobile *caffe_mobile =
       CaffeMobile::Get(string(argv[1]), string(argv[2]));
   caffe_mobile->SetMean(string(argv[3]));
-  vector<int> top_3 = caffe_mobile->PredictTopK(string(argv[4]), 3);
+  vector<int> top_3 = caffe_mobile->PredictTopK(cv::imread(string(argv[4]), -1), 3);
   for (auto i : top_3) {
     std::cout << i << std::endl;
   }
