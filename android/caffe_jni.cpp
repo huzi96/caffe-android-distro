@@ -167,6 +167,15 @@ Java_com_sh1r0_caffe_1android_1lib_CaffeMobile_extractFeatures(
   return array2D;
 }
 
+JNIEXPORT jstring JNICALL 
+Java_com_sh1r0_caffe_1android_1lib_CaffeMobile_hello(JNIEnv *env, jobject thiz)
+{
+  const char *c_str = NULL;
+  char buff[128] = {0};
+  sprintf(buff, "hello world\n");
+  return env->NewStringUTF(buff);
+}
+
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved) {
   JNIEnv *env = NULL;
   jint result = -1;
@@ -181,6 +190,7 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved) {
 
   return JNI_VERSION_1_6;
 }
+
 
 #ifdef __cplusplus
 }
