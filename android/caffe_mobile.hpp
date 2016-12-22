@@ -16,7 +16,7 @@ public:
   ~CaffeMobile();
 
   static CaffeMobile *Get();
-  static CaffeMobile *Get(const string &model_path, const string &weights_path);
+  static CaffeMobile *Get(const string &model_path, const string &weights_path, const string &solver_path);
 
   void SetMean(const string &mean_file);
 
@@ -35,8 +35,9 @@ private:
   static CaffeMobile *caffe_mobile_;
   static string model_path_;
   static string weights_path_;
+  static string solver_path_;
 
-  CaffeMobile(const string &model_path, const string &weights_path);
+  CaffeMobile(const string &model_path, const string &weights_path, const string &solver_path);
 
   void Preprocess(const cv::Mat &img, vector<cv::Mat> *input_channels);
 
@@ -49,6 +50,10 @@ private:
   int num_channels_;
   cv::Mat mean_;
   float scale_;
+
+  /*My new solver object*/
+  SolverParameter solver_param;
+
 };
 
 } // namespace caffe

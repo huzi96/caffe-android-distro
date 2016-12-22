@@ -69,9 +69,10 @@ JNIEXPORT void JNICALL Java_com_sh1r0_caffe_1android_1lib_CaffeMobile_enableLog(
     JNIEnv *env, jobject thiz, jboolean enabled) {}
 
 JNIEXPORT jint JNICALL Java_com_sh1r0_caffe_1android_1lib_CaffeMobile_loadModel(
-    JNIEnv *env, jobject thiz, jstring modelPath, jstring weightsPath) {
+    JNIEnv *env, jobject thiz, jstring modelPath, jstring weightsPath, jstring solverPath) {
   CaffeMobile::Get(jstring2string(env, modelPath),
-                   jstring2string(env, weightsPath));
+                   jstring2string(env, weightsPath),
+                   jstring2string(env, solverPath));
   return 0;
 }
 

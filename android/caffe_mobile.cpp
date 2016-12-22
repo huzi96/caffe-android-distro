@@ -1,6 +1,8 @@
 #include <algorithm>
 #include <string>
 #include <vector>
+#include <cstring>
+#include <map>
 
 #include "boost/algorithm/string.hpp"
 
@@ -13,6 +15,11 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
+#include <gflags/gflags.h>
+#include <glog/logging.h>
+
+#include "caffe/util/signal_handler.h"
+
 using std::clock;
 using std::clock_t;
 using std::string;
@@ -23,6 +30,16 @@ using caffe::Caffe;
 using caffe::Datum;
 using caffe::Net;
 using caffe::MemoryDataLayer;
+
+using caffe::Layer;
+using caffe::Solver;
+using caffe::shared_ptr;
+using caffe::string;
+using caffe::Timer;
+using caffe::vector;
+
+DEFINE_string(solver, "",
+    "The solver definition protocol buffer text file.");
 
 namespace caffe {
 
@@ -37,6 +54,7 @@ template <typename T> vector<int> argmax(vector<T> const &values, int N) {
 CaffeMobile *CaffeMobile::caffe_mobile_ = 0;
 string CaffeMobile::model_path_ = "";
 string CaffeMobile::weights_path_ = "";
+string CaffeMobile::solver_path_ = "";
 
 CaffeMobile *CaffeMobile::Get() {
   CHECK(caffe_mobile_);
@@ -44,21 +62,28 @@ CaffeMobile *CaffeMobile::Get() {
 }
 
 CaffeMobile *CaffeMobile::Get(const string &model_path,
-                              const string &weights_path) {
+                              const string &weights_path,
+                              const string &solver_path) {
   if (!caffe_mobile_ || model_path != model_path_ ||
       weights_path != weights_path_) {
-    caffe_mobile_ = new CaffeMobile(model_path, weights_path);
+    caffe_mobile_ = new CaffeMobile(model_path, weights_path, solver_path);
     model_path_ = model_path;
     weights_path_ = weights_path;
+    solver_path_ = solver_path;
   }
   return caffe_mobile_;
 }
 
-CaffeMobile::CaffeMobile(const string &model_path, const string &weights_path) {
+CaffeMobile::CaffeMobile(const string &model_path,
+  const string &weights_path,
+  const string &solver_path) 
+{
   CHECK_GT(model_path.size(), 0) << "Need a model definition to score.";
   CHECK_GT(weights_path.size(), 0) << "Need model weights to score.";
-
+  CHECK_GT(solver_path.size(), 0) << "Need solver descriptor file.";
   Caffe::set_mode(Caffe::CPU);
+
+  ReadSolverParamsFromTextFileOrDie(solver_path, &solver_param);
 
   clock_t t_start = clock();
   net_.reset(new Net<float>(model_path, caffe::TEST));
@@ -221,6 +246,7 @@ vector<float> CaffeMobile::GetConfidenceScore(const cv::Mat &img) {
   return Forward(img);
 }
 
+
 vector<int> CaffeMobile::PredictTopK(const cv::Mat &img, int k) {
   const vector<float> probs = Forward(img);
   k = std::min<int>(std::max(k, 1), probs.size());
@@ -263,8 +289,8 @@ int main(int argc, char const *argv[]) {
   }
 
   CaffeMobile *caffe_mobile =
-      CaffeMobile::Get(string(argv[1]), string(argv[2]));
-  caffe_mobile->SetMean(string(argv[3]));
+      CaffeMobile::Get(string(argv[1]), string(argv[2]), string(argv[3]));
+  caffe_mobile->SetMean(string(argv[4]));
   vector<int> top_3 = caffe_mobile->PredictTopK(cv::imread(string(argv[4]), -1), 3);
   for (auto i : top_3) {
     std::cout << i << std::endl;
