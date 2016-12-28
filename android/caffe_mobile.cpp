@@ -38,8 +38,10 @@ using caffe::string;
 using caffe::Timer;
 using caffe::vector;
 
-DEFINE_string(solver, "",
-    "The solver definition protocol buffer text file.");
+int __run(int argc, char *argv[]);
+
+// DEFINE_string(solver, "",
+//     "The solver definition protocol buffer text file.");
 
 namespace caffe {
 
@@ -250,6 +252,9 @@ vector<float> CaffeMobile::GetConfidenceScore(const cv::Mat &img) {
 vector<int> CaffeMobile::PredictTopK(const cv::Mat &img, int k) {
   const vector<float> probs = Forward(img);
   k = std::min<int>(std::max(k, 1), probs.size());
+  // char *args[]={"caffe","train"};
+  char *args[] = {"caffe", "--solver=examples/mnist/lenet_solver.prototxt"};
+  __run(2, args);
   return argmax(probs, k);
 }
 
