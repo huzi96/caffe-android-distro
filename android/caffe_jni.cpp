@@ -12,6 +12,7 @@
 
 #include "caffe/caffe.hpp"
 #include "caffe_mobile.hpp"
+#include "caffe_training.hpp"
 
 #ifdef __cplusplus
 extern "C" {
@@ -20,6 +21,7 @@ extern "C" {
 using std::string;
 using std::vector;
 using caffe::CaffeMobile;
+using caffe::CaffeTrain;
 
 int getTimeSec() {
   struct timespec now;
@@ -168,13 +170,19 @@ Java_com_sh1r0_caffe_1android_1lib_CaffeMobile_extractFeatures(
   return array2D;
 }
 
-JNIEXPORT jstring JNICALL 
-Java_com_sh1r0_caffe_1android_1lib_CaffeMobile_hello(JNIEnv *env, jobject thiz)
+JNIEXPORT jint JNICALL 
+Java_com_sh1r0_caffe_1android_1lib_CaffeTrain_InitTrainModel(JNIEnv *env, jobject thiz, jstring solverPath)
 {
-  const char *c_str = NULL;
-  char buff[128] = {0};
-  sprintf(buff, "hello world\n");
-  return env->NewStringUTF(buff);
+  CaffeTrain::Get(jstring2string(env, solverPath));
+  return 0;
+}
+
+JNIEXPORT jint JNICALL 
+Java_com_sh1r0_caffe_1android_1lib_CaffeTrain_SolveTest(JNIEnv *env, jobject thiz)
+{
+  CaffeTrain *caffe_train = CaffeTrain::Get();
+  caffe_train->solve_test();
+  return 0;
 }
 
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved) {
