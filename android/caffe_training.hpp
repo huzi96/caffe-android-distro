@@ -45,6 +45,12 @@ using std::vector;
 
 namespace caffe {
 
+template <typename Dtype>
+class DistriSolver: public Solver<Dtype>
+{
+
+};
+
 class CaffeTrain {
 public:
   ~CaffeTrain();

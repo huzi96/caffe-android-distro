@@ -185,6 +185,38 @@ Java_com_sh1r0_caffe_1android_1lib_CaffeTrain_SolveTest(JNIEnv *env, jobject thi
   return 0;
 }
 
+JNIEXPORT jint JNICALL
+Java_com_sh1r0_caffe_1android_1lib_CaffeTrain_Forward(JNIEnv *env, jobject thiz)
+{
+  return 0;
+}
+
+JNIEXPORT jint JNICALL
+Java_com_sh1r0_caffe_1android_1lib_CaffeTrain_Backward(JNIEnv *env, jobject thiz)
+{
+  return 0;
+}
+
+JNIEXPORT jfloatArray JNICALL
+Java_com_sh1r0_caffe_1android_1lib_CaffeTrain_Get_Current_State(JNIEnv *env, jobject thiz)
+{
+  float example[5] = {1,2,3,4,5};
+  jfloatArray result;
+  result = env->NewFloatArray(5);
+  if (result == NULL) {
+    return NULL; /* out of memory error thrown */
+  }
+  // move from the temp structure to the java structure
+  env->SetFloatArrayRegion(result, 0, 5, example);
+  return result;
+}
+
+JNIEXPORT jint JNICALL
+Java_com_sh1r0_caffe_1android_1lib_CaffeTrain_Set_Current_State(JNIEnv *env, jobject thiz, jbyteArray buf)
+{
+  return 0;
+}
+
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved) {
   JNIEnv *env = NULL;
   jint result = -1;
