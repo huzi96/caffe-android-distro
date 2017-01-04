@@ -21,6 +21,8 @@
 
 #include "caffe/util/signal_handler.h"
 
+#include "boost/asio.hpp"
+
 using std::clock;
 using std::clock_t;
 using std::string;
@@ -60,6 +62,7 @@ public:
 
   int solve_test();
   int solve();
+  void OneIter();
 
 private:
   static CaffeTrain *caffe_train_;

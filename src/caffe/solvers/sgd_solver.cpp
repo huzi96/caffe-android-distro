@@ -101,11 +101,11 @@ void SGDSolver<Dtype>::ClipGradients() {
 template <typename Dtype>
 void SGDSolver<Dtype>::ApplyUpdate() {
   CHECK(Caffe::root_solver());
-  Dtype rate = GetLearningRate();
+  Dtype rate = GetLearningRate();//Get lr from this->param_
   if (this->param_.display() && this->iter_ % this->param_.display() == 0) {
     LOG(INFO) << "Iteration " << this->iter_ << ", lr = " << rate;
   }
-  ClipGradients();
+  ClipGradients();//need net_->learnable_param
   for (int param_id = 0; param_id < this->net_->learnable_params().size();
        ++param_id) {
     Normalize(param_id);

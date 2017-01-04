@@ -14,6 +14,8 @@
 #include "caffe_mobile.hpp"
 #include "caffe_training.hpp"
 
+#include "boost/asio.hpp"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -168,6 +170,14 @@ Java_com_sh1r0_caffe_1android_1lib_CaffeMobile_extractFeatures(
     env->SetObjectArrayElement(array2D, i, array1D);
   }
   return array2D;
+}
+
+JNIEXPORT jint JNICALL
+Java_com_sh1r0_caffe_1android_1lib_CaffeTrain_Exp(JNIEnv *env, jobject thiz)
+{
+  boost::asio::streambuf b;
+  std::ostream os(&b);
+  return 0;
 }
 
 JNIEXPORT jint JNICALL 

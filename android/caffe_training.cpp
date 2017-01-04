@@ -84,9 +84,21 @@ int CaffeTrain::solve() {return 0;}
 int CaffeTrain::solve_test()
 {
   LOG(INFO) << ("simple train");
-  solver->Solve();
+  OneIter();
   return 0;
 }
 
+void CaffeTrain::OneIter() {
+  LOG(INFO) << "Solving ";
+  // LOG(INFO) << "Learning Rate Policy: " << param_.lr_policy();
+  for(int i=0; i<1000; i++)
+  {
+    boost::asio::streambuf buf;
+    std::ostream outstream(&buf);
+    solver->Half_iter(&outstream);
+    std::istream instream(&buf);
+    solver->Cont_iter(&instream);
+  }
+}
 
 }

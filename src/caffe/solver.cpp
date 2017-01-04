@@ -492,6 +492,32 @@ void Solver<Dtype>::UpdateSmoothedLoss(Dtype loss, int start_iter,
   }
 }
 
+template <typename Dtype>
+int Solver<Dtype>::Step_stage_0(int &average_loss, const int start_iter)
+{
+  //not implemented
+  return -1;
+}
+
+template <typename Dtype>
+int Solver<Dtype>::Step_stage_1()
+{
+  //not implemented
+  return -1;
+}
+
+template <typename Dtype>
+int Solver<Dtype>::Half_iter(ostream *outstream) {
+  //not implemented
+  return 0;
+}
+
+template <typename Dtype>
+int Solver<Dtype>::Cont_iter(istream *instream) {
+  //not implemented
+  return 0;
+}
+
 INSTANTIATE_CLASS(Solver);
 
 }  // namespace caffe

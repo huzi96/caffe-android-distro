@@ -5,6 +5,22 @@
 #include <vector>
 
 #include "caffe/solver.hpp"
+#include "boost/asio.hpp"
+
+#include "caffe/common.hpp"
+#include "caffe/proto/caffe.pb.h"
+#include "caffe/util/io.hpp"
+
+#include <google/protobuf/io/coded_stream.h>
+#include <google/protobuf/io/zero_copy_stream_impl.h>
+#include <google/protobuf/text_format.h>
+
+using google::protobuf::io::IstreamInputStream;
+using google::protobuf::io::ZeroCopyInputStream;
+using google::protobuf::io::CodedInputStream;
+using google::protobuf::io::ZeroCopyOutputStream;
+using google::protobuf::io::CodedOutputStream;
+using google::protobuf::Message;
 
 namespace caffe {
 
@@ -152,6 +168,12 @@ class DistroSolver : public SGDSolver<Dtype> {
       : SGDSolver<Dtype>(param_file) {}
   virtual inline const char* type() const { return "Distro"; }
 
+  virtual void Step(int iters);
+  virtual int Step_stage_0(int &average_loss, const int start_iter);
+  virtual int Step_stage_1();
+  virtual int Half_iter(ostream *outstream);
+  virtual int Cont_iter(istream *instream);
+  
  protected:
   DISABLE_COPY_AND_ASSIGN(DistroSolver);
 };
