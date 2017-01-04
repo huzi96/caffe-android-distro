@@ -53,6 +53,13 @@ class DistriSolver: public Solver<Dtype>
 
 };
 
+struct membuf : std::streambuf
+{
+    membuf(char* begin, char* end) {
+        this->setg(begin, begin, end);
+    }
+};
+
 class CaffeTrain {
 public:
   ~CaffeTrain();
@@ -63,6 +70,9 @@ public:
   int solve_test();
   int solve();
   void OneIter();
+  int UpdateWith(char *raw_stream, unsigned long length);
+  char* ForwardBackword();
+  unsigned long net_size;
 
 private:
   static CaffeTrain *caffe_train_;
