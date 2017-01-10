@@ -117,19 +117,35 @@ int DistroSolver<Dtype>::Half_iter(ostream *outstream) {
 	NetParameter export_param;
 	this->net_->ToProto(&export_param, true);
 	export_param.SerializeToOstream(outstream);
+	// this->net_->ClearParamDiffs();
+	return 0;
+}
+
+/*Get the pair_net*/
+template <typename Dtype>
+int DistroSolver<Dtype>::GetAccumulatedNet(ostream* outstream) {
+	NetParameter export_param;
+	this->pair_net->ToProto(&export_param, true);
+    // LOG(INFO) << "SerializeToOstream";
+	export_param.SerializeToOstream(outstream);
+	this->net_->ClearParamDiffs();
+
+	merged_cnt = 0;
+    // LOG(INFO) << "Delete pair_net";
+	// delete this->pair_net;
 	return 0;
 }
 
 /*Do stage 1 with the parameter*/
 template <typename Dtype>
 int DistroSolver<Dtype>::Cont_iter(istream *instream) {
-	LOG(INFO) << "Cont_iter";
 	ZeroCopyInputStream *inputstream = new IstreamInputStream(instream);
 	CodedInputStream* coded_input = new CodedInputStream(inputstream);
 	// coded_input->SetTotalBytesLimit(kProtoReadBytesLimit, 536870912);
 	NetParameter *proto = new NetParameter();
 	bool success = proto->ParseFromCodedStream(coded_input);
 	const int timeout = 32;
+	this->net_->ClearParamDiffs();
 	for (int i = 0; i < timeout; ++i)
 	{
 		if(success) {
@@ -160,14 +176,11 @@ int DistroSolver<Dtype>::Cont_iter(istream *instream) {
 /*Accumulate diff in the pair_net.*/
 template <typename Dtype>
 int DistroSolver<Dtype>::Accumulate_diff(istream *instream) {
-	LOG(INFO) << "Accumulate";
+	this->net_->ClearParamDiffs();
 	ZeroCopyInputStream *inputstream = new IstreamInputStream(instream);
 	CodedInputStream* coded_input = new CodedInputStream(inputstream);
 	// coded_input->SetTotalBytesLimit(kProtoReadBytesLimit, 536870912);
 	NetParameter *proto = new NetParameter();
-	//////////////////////////////////////////////////////////////////////////
-	// merged_cnt = 0;
-	//////////////////////////////////////////////////////////////////////////
 	const int timeout = 32;
 	for (int i = 0; i < timeout; ++i)
 	{
@@ -245,19 +258,7 @@ int DistroSolver<Dtype>::Accumulate_diff(istream *instream) {
 	return 0;
 }
 
-/*Get the pair_net*/
-template <typename Dtype>
-int DistroSolver<Dtype>::GetAccumulatedNet(ostream* outstream) {
-	LOG(INFO) << "GetAccumulatedNet";
-	NetParameter export_param;
-	this->pair_net->ToProto(&export_param, true);
-    // LOG(INFO) << "SerializeToOstream";
-	export_param.SerializeToOstream(outstream);
-	merged_cnt = 0;
-    // LOG(INFO) << "Delete pair_net";
-	// delete this->pair_net;
-	return 0;
-}
+
 
 /*Set the parameters according to an incoming net*/
 template <typename Dtype>
