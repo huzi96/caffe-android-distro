@@ -123,6 +123,7 @@ int DistroSolver<Dtype>::Half_iter(ostream *outstream) {
 /*Do stage 1 with the parameter*/
 template <typename Dtype>
 int DistroSolver<Dtype>::Cont_iter(istream *instream) {
+	LOG(INFO) << "Cont_iter";
 	ZeroCopyInputStream *inputstream = new IstreamInputStream(instream);
 	CodedInputStream* coded_input = new CodedInputStream(inputstream);
 	// coded_input->SetTotalBytesLimit(kProtoReadBytesLimit, 536870912);
@@ -159,6 +160,7 @@ int DistroSolver<Dtype>::Cont_iter(istream *instream) {
 /*Accumulate diff in the pair_net.*/
 template <typename Dtype>
 int DistroSolver<Dtype>::Accumulate_diff(istream *instream) {
+	LOG(INFO) << "Accumulate";
 	ZeroCopyInputStream *inputstream = new IstreamInputStream(instream);
 	CodedInputStream* coded_input = new CodedInputStream(inputstream);
 	// coded_input->SetTotalBytesLimit(kProtoReadBytesLimit, 536870912);
@@ -246,6 +248,7 @@ int DistroSolver<Dtype>::Accumulate_diff(istream *instream) {
 /*Get the pair_net*/
 template <typename Dtype>
 int DistroSolver<Dtype>::GetAccumulatedNet(ostream* outstream) {
+	LOG(INFO) << "GetAccumulatedNet";
 	NetParameter export_param;
 	this->pair_net->ToProto(&export_param, true);
     // LOG(INFO) << "SerializeToOstream";
