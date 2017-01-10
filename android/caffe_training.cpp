@@ -88,32 +88,73 @@ int CaffeTrain::solve_test()
   return 0;
 }
 
-char *CaffeTrain::ForwardBackword() {
+char *CaffeTrain::ForwardBackward() {
   boost::asio::streambuf buf;
   std::ostream outstream(&buf);
   solver->Half_iter(&outstream);
   char* outbytes = new char[buf.size()];
   memcpy(outbytes, boost::asio::buffer_cast<const void*>(buf.data()), buf.size());
   net_size = buf.size();
-  LOG(INFO) << net_size;
+  // LOG(INFO) << net_size;
   return outbytes;
 }
 
-int CaffeTrain::UpdateWith(char *raw_stream, unsigned long length) {
+int CaffeTrain::UpdateWith(std::vector<char> raw_vector) {
+  int length = raw_vector.size();
+  char *raw_stream = new char[length];
+  std::copy(raw_vector.begin(), raw_vector.end(), raw_stream);
   membuf buf(raw_stream, raw_stream + length);
   std::istream instream(&buf);
-  delete raw_stream;
   solver->Cont_iter(&instream);
+  delete raw_stream;
   return 0;
+}
+
+int CaffeTrain::Accumulate(std::vector<char> raw_vector) {
+  int length = raw_vector.size();
+  char *raw_stream = new char[length];
+  std::copy(raw_vector.begin(), raw_vector.end(), raw_stream);
+  membuf buf(raw_stream, raw_stream + length);
+  std::istream instream(&buf);
+  solver->Accumulate_diff(&instream);
+  delete raw_stream;
+  return 0;
+}
+
+char *CaffeTrain::GetNewNet() {
+  boost::asio::streambuf buf;
+  std::ostream outstream(&buf);
+
+  // LOG(INFO) << "GetAccumulatedNet";
+  solver->GetAccumulatedNet(&outstream);
+
+  // LOG(INFO) << "Generate block buffer";
+  char* outbytes = new char[buf.size()];
+  memcpy(outbytes, boost::asio::buffer_cast<const void*>(buf.data()), buf.size());
+  net_size = buf.size();
+  // LOG(INFO) << net_size;
+  return outbytes;
+}
+
+void CaffeTrain::SetNormalizeScale(int scale)
+{
+  this->solver->SetNormalizeScale(scale);
 }
 
 void CaffeTrain::OneIter() {
   LOG(INFO) << "Solving ";
   // LOG(INFO) << "Learning Rate Policy: " << param_.lr_policy();
+  solver->SetNormalizeScale(1);
   for(int i=0; i<1000; i++)
   {
-    char *p = ForwardBackword();
-    UpdateWith(p, net_size);
+    // LOG(INFO) << "ForwardBackward";
+    char *p = ForwardBackward();
+    // LOG(INFO) << "Accumulate";
+    // Accumulate(p, net_size);
+    // // LOG(INFO) << "GetNewNet";
+    // p = GetNewNet();
+    // LOG(INFO) << "UpdateWith";
+    // UpdateWith(p, net_size);
   }
 }
 

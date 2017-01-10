@@ -175,8 +175,6 @@ Java_com_sh1r0_caffe_1android_1lib_CaffeMobile_extractFeatures(
 JNIEXPORT jint JNICALL
 Java_com_sh1r0_caffe_1android_1lib_CaffeTrain_Exp(JNIEnv *env, jobject thiz)
 {
-  boost::asio::streambuf b;
-  std::ostream os(&b);
   return 0;
 }
 
@@ -195,17 +193,66 @@ Java_com_sh1r0_caffe_1android_1lib_CaffeTrain_SolveTest(JNIEnv *env, jobject thi
   return 0;
 }
 
-JNIEXPORT jint JNICALL
-Java_com_sh1r0_caffe_1android_1lib_CaffeTrain_Forward(JNIEnv *env, jobject thiz)
+JNIEXPORT jbyteArray JNICALL
+Java_com_sh1r0_caffe_1android_1lib_CaffeTrain_ForwardBackward(JNIEnv *env, jobject thiz)
 {
-  return 0;
+  CaffeTrain *caffe_train = CaffeTrain::Get();
+  char *payload = caffe_train->ForwardBackward();
+  int payload_length = caffe_train->net_size;
+  jbyteArray result;
+  result = env->NewByteArray(payload_length);
+  if (result == NULL) {
+    return NULL;
+  }
+  env->SetByteArrayRegion(result, 0, payload_length, (jbyte *)payload);
+  return result;
 }
 
 JNIEXPORT jint JNICALL
-Java_com_sh1r0_caffe_1android_1lib_CaffeTrain_Backward(JNIEnv *env, jobject thiz)
+Java_com_sh1r0_caffe_1android_1lib_CaffeTrain_Accumulate(JNIEnv *env, jobject thiz, jbyteArray payload)
 {
+  CaffeTrain *caffe_train = CaffeTrain::Get();
+  jbyte *raw_stream = env->GetByteArrayElements(payload, 0);
+  std::vector<char> byte_stream(raw_stream, raw_stream+env->GetArrayLength(payload));
+  caffe_train->Accumulate(byte_stream);
+  env->ReleaseByteArrayElements(payload, raw_stream, 0);
   return 0;
 }
+
+JNIEXPORT jbyteArray JNICALL
+Java_com_sh1r0_caffe_1android_1lib_CaffeTrain_GetNewNet(JNIEnv *env, jobject thiz)
+{
+  CaffeTrain *caffe_train = CaffeTrain::Get();
+  char *payload = caffe_train->GetNewNet();
+  int payload_length = caffe_train->net_size;
+  jbyteArray result;
+  result = env->NewByteArray(payload_length);
+  if (result == NULL) {
+    return NULL;
+  }
+  env->SetByteArrayRegion(result, 0, payload_length, (jbyte *)payload);
+  return result;
+}
+
+JNIEXPORT jint JNICALL
+Java_com_sh1r0_caffe_1android_1lib_CaffeTrain_UpdateWith(JNIEnv *env, jobject thiz, jbyteArray payload)
+{
+  CaffeTrain *caffe_train = CaffeTrain::Get();
+  jbyte *raw_stream = env->GetByteArrayElements(payload, 0);
+  std::vector<char> byte_stream(raw_stream, raw_stream+env->GetArrayLength(payload));
+  caffe_train->UpdateWith(byte_stream);
+  env->ReleaseByteArrayElements(payload, raw_stream, 0);
+  return 0;
+}
+
+JNIEXPORT void JNICALL
+Java_com_sh1r0_caffe_1android_1lib_CaffeTrain_SetNormalizeScale(JNIEnv *env, jobject thiz, jint scale)
+{
+
+  CaffeTrain *caffe_train = CaffeTrain::Get();
+  caffe_train->SetNormalizeScale((int) scale);
+}
+
 
 JNIEXPORT jfloatArray JNICALL
 Java_com_sh1r0_caffe_1android_1lib_CaffeTrain_Get_Current_State(JNIEnv *env, jobject thiz)

@@ -163,18 +163,27 @@ template <typename Dtype>
 class DistroSolver : public SGDSolver<Dtype> {
  public:
   explicit DistroSolver(const SolverParameter& param)
-      : SGDSolver<Dtype>(param) {}
+      : SGDSolver<Dtype>(param), merged_cnt(0) {}
   explicit DistroSolver(const string& param_file)
-      : SGDSolver<Dtype>(param_file) {}
+      : SGDSolver<Dtype>(param_file), merged_cnt(0) {}
   virtual inline const char* type() const { return "Distro"; }
-
   virtual void Step(int iters);
   virtual int Step_stage_0(int &average_loss, const int start_iter);
   virtual int Step_stage_1();
   virtual int Half_iter(ostream *outstream);
   virtual int Cont_iter(istream *instream);
-  
+
+  virtual int Accumulate_diff(istream *instream);
+  virtual int GetAccumulatedNet(ostream *outstream);
+  virtual int SetNet(istream *instream);
+  virtual void SetNormalizeScale(int scale);
+
+  virtual void Normalize(int param_id);
+
  protected:
+  int merged_cnt;
+  int normalize_scale;
+  shared_ptr<Net<Dtype> > pair_net;
   DISABLE_COPY_AND_ASSIGN(DistroSolver);
 };
 

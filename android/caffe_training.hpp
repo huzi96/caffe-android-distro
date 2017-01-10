@@ -70,9 +70,12 @@ public:
   int solve_test();
   int solve();
   void OneIter();
-  int UpdateWith(char *raw_stream, unsigned long length);
-  char* ForwardBackword();
-  unsigned long net_size;
+  int UpdateWith(std::vector<char> raw_vector);
+  char* ForwardBackward();
+  int net_size;
+  int Accumulate(std::vector<char> raw_vector);
+  char *GetNewNet();
+  void SetNormalizeScale(int scale);
 
 private:
   static CaffeTrain *caffe_train_;

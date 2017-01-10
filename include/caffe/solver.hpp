@@ -67,6 +67,11 @@ class Solver {
   virtual int Half_iter(ostream *outstream);
   virtual int Cont_iter(istream *instream);
 
+  virtual int Accumulate_diff(istream *instream);
+  virtual int GetAccumulatedNet(ostream *outstream);
+  virtual int SetNet(istream *instream);
+  virtual void SetNormalizeScale(int scale);
+
   // The Restore method simply dispatches to one of the
   // RestoreSolverStateFrom___ protected methods. You should implement these
   // methods to restore the state from the appropriate snapshot type.

@@ -4,6 +4,10 @@
 
 namespace caffe {
 
+/* 
+ * Two separate stage for one iteration
+ * Stage 0 is for one (or more) ForwardBackward operation
+ */
 template <typename Dtype>
 int DistroSolver<Dtype>::Step_stage_0(int &average_loss, const int start_iter) {
 	// zero-init the params
@@ -61,6 +65,7 @@ int DistroSolver<Dtype>::Step_stage_0(int &average_loss, const int start_iter) {
 	return 0;
 }
 
+/*Stage 1 is for applying update according to blobs in the net*/
 template <typename Dtype>
 int DistroSolver<Dtype>::Step_stage_1() {
     this->ApplyUpdate();
@@ -86,6 +91,7 @@ int DistroSolver<Dtype>::Step_stage_1() {
     return 0;
 }
 
+/*For testing, one stage 0 and one stage 1*/
 template <typename Dtype>
 void DistroSolver<Dtype>::Step(int iters) {
 	const int start_iter = this->iter_;
@@ -100,6 +106,7 @@ void DistroSolver<Dtype>::Step(int iters) {
 	}
 }
 
+/*Do stage 0 and return the net parameters*/
 template <typename Dtype>
 int DistroSolver<Dtype>::Half_iter(ostream *outstream) {
 	const int start_iter = this->iter_;
@@ -113,8 +120,145 @@ int DistroSolver<Dtype>::Half_iter(ostream *outstream) {
 	return 0;
 }
 
+/*Do stage 1 with the parameter*/
 template <typename Dtype>
 int DistroSolver<Dtype>::Cont_iter(istream *instream) {
+	ZeroCopyInputStream *inputstream = new IstreamInputStream(instream);
+	CodedInputStream* coded_input = new CodedInputStream(inputstream);
+	// coded_input->SetTotalBytesLimit(kProtoReadBytesLimit, 536870912);
+	NetParameter *proto = new NetParameter();
+	bool success = proto->ParseFromCodedStream(coded_input);
+	const int timeout = 32;
+	for (int i = 0; i < timeout; ++i)
+	{
+		if(success) {
+			// LOG(INFO) << "Success in decoding";
+			this->net_->CopyTrainedLayersFrom(*proto);
+			if (i != 0) {
+				LOG(INFO) << "Try again worked";
+			}
+			break;
+		}
+		else {
+			LOG(INFO) << "Fail decoding";
+			sleep(1);
+		}
+	}
+	if (!success)
+	{
+		CHECK(success == true) << "Tried 64 times and fail";
+	}
+	delete proto;
+	delete coded_input;
+	delete inputstream;
+	Step_stage_1();
+	return 0;
+}
+
+
+/*Accumulate diff in the pair_net.*/
+template <typename Dtype>
+int DistroSolver<Dtype>::Accumulate_diff(istream *instream) {
+	ZeroCopyInputStream *inputstream = new IstreamInputStream(instream);
+	CodedInputStream* coded_input = new CodedInputStream(inputstream);
+	// coded_input->SetTotalBytesLimit(kProtoReadBytesLimit, 536870912);
+	NetParameter *proto = new NetParameter();
+	//////////////////////////////////////////////////////////////////////////
+	// merged_cnt = 0;
+	//////////////////////////////////////////////////////////////////////////
+	const int timeout = 32;
+	for (int i = 0; i < timeout; ++i)
+	{
+		bool success = proto->ParseFromCodedStream(coded_input);
+		if(success) {
+			// LOG(INFO) << "Success in parsing";
+			if (i != 0)
+			{
+				LOG(INFO) << "Succeed at last";
+			}
+			if(merged_cnt == 0) {
+				// this->pair_net = new Net<Dtype>(*proto, this->net_.get());
+				// this->pair_net = new Net<Dtype>(*proto);
+				this->pair_net = this->net_;
+				this->pair_net->CopyTrainedLayersFrom(*proto);
+				// LOG(INFO) << "Build pair net successfully";
+				merged_cnt = 1;
+				delete proto;
+				delete coded_input;
+				delete inputstream;
+			}
+			else
+			{
+				merged_cnt++;
+				// CHECK_EQ(pair_net.layers().size(), this->net_->layers().size());
+				int num_source_layers = proto->layer_size();
+				for (int i = 0; i < num_source_layers; ++i) {
+					const LayerParameter& source_layer = proto->layer(i);
+					const string& source_layer_name = source_layer.name();
+					int target_layer_id = 0;
+					while (target_layer_id != this->pair_net->layer_names().size() &&
+					    this->pair_net->layer_names()[target_layer_id] != source_layer_name) {
+					  	++target_layer_id;
+					}
+					if (target_layer_id == this->pair_net->layer_names().size()) {
+						LOG(INFO) << "Ignoring source layer " << source_layer_name;
+						continue;
+					}
+					DLOG(INFO) << "Copying source layer " << source_layer_name;
+					vector<shared_ptr<Blob<Dtype> > >& target_blobs =
+					    this->pair_net->layers()[target_layer_id]->blobs();
+					CHECK_EQ(target_blobs.size(), source_layer.blobs_size())
+					    << "Incompatible number of blobs for layer " << source_layer_name;
+					for (int j = 0; j < target_blobs.size(); ++j) {
+					 	if (!target_blobs[j]->ShapeEquals(source_layer.blobs(j))) {
+						    Blob<Dtype> source_blob;
+						    const bool kReshape = true;
+						    source_blob.FromProto(source_layer.blobs(j), kReshape);
+						    LOG(FATAL) << "Cannot copy param " << j << " weights from layer '"
+						        << source_layer_name << "'; shape mismatch.  Source param shape is "
+						        << source_blob.shape_string() << "; target param shape is "
+						        << target_blobs[j]->shape_string() << ". "
+						        << "To learn this layer's parameters from scratch rather than "
+						        << "copying from a saved net, rename the layer.";
+				  		}
+						// target_blobs[j]->FromProto(source_layer.blobs(j), kReshape);
+					 	Blob<Dtype> source_blob;
+					    const bool kReshape = true;
+					    source_blob.FromProto(source_layer.blobs(j), kReshape);
+						caffe_cpu_axpby<Dtype>(source_blob.count(), 1.,
+			              source_blob.cpu_diff(), 1.,
+			              target_blobs[j]->mutable_cpu_data());
+					}
+				}
+				delete proto;
+				delete coded_input;
+				delete inputstream;
+			}
+			break;
+		}
+		else {
+			LOG(INFO) << "Error in parsing";
+		}
+	}
+	return 0;
+}
+
+/*Get the pair_net*/
+template <typename Dtype>
+int DistroSolver<Dtype>::GetAccumulatedNet(ostream* outstream) {
+	NetParameter export_param;
+	this->pair_net->ToProto(&export_param, true);
+    // LOG(INFO) << "SerializeToOstream";
+	export_param.SerializeToOstream(outstream);
+	merged_cnt = 0;
+    // LOG(INFO) << "Delete pair_net";
+	// delete this->pair_net;
+	return 0;
+}
+
+/*Set the parameters according to an incoming net*/
+template <typename Dtype>
+int DistroSolver<Dtype>::SetNet(istream* instream) {
 	ZeroCopyInputStream *inputstream = new IstreamInputStream(instream);
 	CodedInputStream* coded_input = new CodedInputStream(inputstream);
 	// coded_input->SetTotalBytesLimit(kProtoReadBytesLimit, 536870912);
@@ -127,9 +271,43 @@ int DistroSolver<Dtype>::Cont_iter(istream *instream) {
 	delete proto;
 	delete coded_input;
 	delete inputstream;
-	Step_stage_1();
 	return 0;
 }
+
+/*Oveeriding normalize to do the normalization according to the preset normlize scale*/
+template <typename Dtype>
+void DistroSolver<Dtype>::Normalize(int param_id) {
+	// Scale gradient to counterbalance accumulation.
+	// LOG(INFO)<<"Distro Normalization called";
+	const vector<Blob<Dtype>*>& net_params = this->net_->learnable_params();
+	const Dtype accum_normalization = Dtype(1.) / this->normalize_scale;
+	switch (Caffe::mode()) {
+		case Caffe::CPU: {
+			caffe_scal(net_params[param_id]->count(), accum_normalization,
+			    net_params[param_id]->mutable_cpu_diff());
+		break;
+		}
+		case Caffe::GPU: {
+	#ifndef CPU_ONLY
+			caffe_gpu_scal(net_params[param_id]->count(), accum_normalization,
+		    	net_params[param_id]->mutable_gpu_diff());
+	#else
+			NO_GPU;
+	#endif
+			break;
+		}
+		default:
+		LOG(FATAL) << "Unknown caffe mode: " << Caffe::mode();
+	}
+}
+
+template <typename Dtype>
+void DistroSolver<Dtype>::SetNormalizeScale(int scale)
+{
+	this->normalize_scale = scale;
+}
+
+
 
 INSTANTIATE_CLASS(DistroSolver);
 REGISTER_SOLVER_CLASS(Distro);

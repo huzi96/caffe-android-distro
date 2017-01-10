@@ -518,6 +518,19 @@ int Solver<Dtype>::Cont_iter(istream *instream) {
   return 0;
 }
 
+template <typename Dtype>
+int Solver<Dtype>::Accumulate_diff(istream *instream)
+{return 0;}
+template <typename Dtype>
+int Solver<Dtype>::GetAccumulatedNet(ostream *outstream)
+{return 0;}
+template <typename Dtype>
+int Solver<Dtype>::SetNet(istream *instream)
+{return 0;}
+template <typename Dtype>
+void Solver<Dtype>::SetNormalizeScale(int scale)
+{}
+
 INSTANTIATE_CLASS(Solver);
 
 }  // namespace caffe
