@@ -128,7 +128,7 @@ int DistroSolver<Dtype>::GetAccumulatedNet(ostream* outstream) {
 	this->pair_net->ToProto(&export_param, true);
     // LOG(INFO) << "SerializeToOstream";
 	export_param.SerializeToOstream(outstream);
-	this->net_->ClearParamDiffs();
+	// this->net_->ClearParamDiffs();
 
 	merged_cnt = 0;
     // LOG(INFO) << "Delete pair_net";
@@ -241,8 +241,8 @@ int DistroSolver<Dtype>::Accumulate_diff(istream *instream) {
 					    const bool kReshape = true;
 					    source_blob.FromProto(source_layer.blobs(j), kReshape);
 						caffe_cpu_axpby<Dtype>(source_blob.count(), 1.,
-			              source_blob.cpu_diff(), 1.,
-			              target_blobs[j]->mutable_cpu_data());
+			              source_blob.cpu_diff(), 1,
+			              target_blobs[j]->mutable_cpu_diff());
 					}
 				}
 				delete proto;
