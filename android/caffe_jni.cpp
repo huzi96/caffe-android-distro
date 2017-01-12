@@ -62,17 +62,17 @@ cv::Mat getImage(JNIEnv *env, jbyteArray buf, int width, int height) {
 }
 
 JNIEXPORT void JNICALL
-Java_com_sh1r0_caffe_1android_1lib_CaffeMobile_setNumThreads(JNIEnv *env,
+Java_com_distro_1caffe_1demo_CaffeMobile_setNumThreads(JNIEnv *env,
                                                              jobject thiz,
                                                              jint numThreads) {
   int num_threads = numThreads;
   openblas_set_num_threads(num_threads);
 }
 
-JNIEXPORT void JNICALL Java_com_sh1r0_caffe_1android_1lib_CaffeMobile_enableLog(
+JNIEXPORT void JNICALL Java_com_distro_1caffe_1demo_CaffeMobile_enableLog(
     JNIEnv *env, jobject thiz, jboolean enabled) {}
 
-JNIEXPORT jint JNICALL Java_com_sh1r0_caffe_1android_1lib_CaffeMobile_loadModel(
+JNIEXPORT jint JNICALL Java_com_distro_1caffe_1demo_CaffeMobile_loadModel(
     JNIEnv *env, jobject thiz, jstring modelPath, jstring weightsPath, jstring solverPath) {
   CaffeMobile::Get(jstring2string(env, modelPath),
                    jstring2string(env, weightsPath),
@@ -81,14 +81,14 @@ JNIEXPORT jint JNICALL Java_com_sh1r0_caffe_1android_1lib_CaffeMobile_loadModel(
 }
 
 JNIEXPORT void JNICALL
-Java_com_sh1r0_caffe_1android_1lib_CaffeMobile_setMeanWithMeanFile(
+Java_com_distro_1caffe_1demo_CaffeMobile_setMeanWithMeanFile(
     JNIEnv *env, jobject thiz, jstring meanFile) {
   CaffeMobile *caffe_mobile = CaffeMobile::Get();
   caffe_mobile->SetMean(jstring2string(env, meanFile));
 }
 
 JNIEXPORT void JNICALL
-Java_com_sh1r0_caffe_1android_1lib_CaffeMobile_setMeanWithMeanValues(
+Java_com_distro_1caffe_1demo_CaffeMobile_setMeanWithMeanValues(
     JNIEnv *env, jobject thiz, jfloatArray meanValues) {
   CaffeMobile *caffe_mobile = CaffeMobile::Get();
   int num_channels = env->GetArrayLength(meanValues);
@@ -97,7 +97,7 @@ Java_com_sh1r0_caffe_1android_1lib_CaffeMobile_setMeanWithMeanValues(
   caffe_mobile->SetMean(mean_values);
 }
 
-JNIEXPORT void JNICALL Java_com_sh1r0_caffe_1android_1lib_CaffeMobile_setScale(
+JNIEXPORT void JNICALL Java_com_distro_1caffe_1demo_CaffeMobile_setScale(
     JNIEnv *env, jobject thiz, jfloat scale) {
   CaffeMobile *caffe_mobile = CaffeMobile::Get();
   caffe_mobile->SetScale(scale);
@@ -108,7 +108,7 @@ JNIEXPORT void JNICALL Java_com_sh1r0_caffe_1android_1lib_CaffeMobile_setScale(
  * (str.getBytes("US-ASCII")) which contains the img path
  */
 JNIEXPORT jfloatArray JNICALL
-Java_com_sh1r0_caffe_1android_1lib_CaffeMobile_getConfidenceScore(
+Java_com_distro_1caffe_1demo_CaffeMobile_getConfidenceScore(
     JNIEnv *env, jobject thiz, jbyteArray buf, jint width, jint height) {
   CaffeMobile *caffe_mobile = CaffeMobile::Get();
   vector<float> conf_score =
@@ -129,7 +129,7 @@ Java_com_sh1r0_caffe_1android_1lib_CaffeMobile_getConfidenceScore(
  * (str.getBytes("US-ASCII")) which contains the img path
  */
 JNIEXPORT jintArray JNICALL
-Java_com_sh1r0_caffe_1android_1lib_CaffeMobile_predictImage(
+Java_com_distro_1caffe_1demo_CaffeMobile_predictImage(
     JNIEnv *env, jobject thiz, jbyteArray buf, jint width, jint height,
     jint k) {
   CaffeMobile *caffe_mobile = CaffeMobile::Get();
@@ -151,7 +151,7 @@ Java_com_sh1r0_caffe_1android_1lib_CaffeMobile_predictImage(
  * (str.getBytes("US-ASCII")) which contains the img path
  */
 JNIEXPORT jobjectArray JNICALL
-Java_com_sh1r0_caffe_1android_1lib_CaffeMobile_extractFeatures(
+Java_com_distro_1caffe_1demo_CaffeMobile_extractFeatures(
     JNIEnv *env, jobject thiz, jbyteArray buf, jint width, jint height,
     jstring blobNames) {
   CaffeMobile *caffe_mobile = CaffeMobile::Get();
@@ -173,20 +173,20 @@ Java_com_sh1r0_caffe_1android_1lib_CaffeMobile_extractFeatures(
 }
 
 JNIEXPORT jint JNICALL
-Java_com_sh1r0_caffe_1android_1lib_CaffeTrain_Exp(JNIEnv *env, jobject thiz)
+Java_com_distro_1caffe_1demo_CaffeTrain_Exp(JNIEnv *env, jobject thiz)
 {
   return 0;
 }
 
 JNIEXPORT jint JNICALL 
-Java_com_sh1r0_caffe_1android_1lib_CaffeTrain_InitTrainModel(JNIEnv *env, jobject thiz, jstring solverPath)
+Java_com_distro_1caffe_1demo_CaffeTrain_InitTrainModel(JNIEnv *env, jobject thiz, jstring solverPath)
 {
   CaffeTrain::Get(jstring2string(env, solverPath));
   return 0;
 }
 
 JNIEXPORT jint JNICALL 
-Java_com_sh1r0_caffe_1android_1lib_CaffeTrain_SolveTest(JNIEnv *env, jobject thiz)
+Java_com_distro_1caffe_1demo_CaffeTrain_SolveTest(JNIEnv *env, jobject thiz)
 {
   CaffeTrain *caffe_train = CaffeTrain::Get();
   caffe_train->solve_test();
@@ -194,7 +194,7 @@ Java_com_sh1r0_caffe_1android_1lib_CaffeTrain_SolveTest(JNIEnv *env, jobject thi
 }
 
 JNIEXPORT jbyteArray JNICALL
-Java_com_sh1r0_caffe_1android_1lib_CaffeTrain_ForwardBackward(JNIEnv *env, jobject thiz)
+Java_com_distro_1caffe_1demo_CaffeTrain_ForwardBackward(JNIEnv *env, jobject thiz)
 {
   CaffeTrain *caffe_train = CaffeTrain::Get();
   char *payload = caffe_train->ForwardBackward();
@@ -209,7 +209,7 @@ Java_com_sh1r0_caffe_1android_1lib_CaffeTrain_ForwardBackward(JNIEnv *env, jobje
 }
 
 JNIEXPORT jint JNICALL
-Java_com_sh1r0_caffe_1android_1lib_CaffeTrain_Accumulate(JNIEnv *env, jobject thiz, jbyteArray payload)
+Java_com_distro_1caffe_1demo_CaffeTrain_Accumulate(JNIEnv *env, jobject thiz, jbyteArray payload)
 {
   CaffeTrain *caffe_train = CaffeTrain::Get();
   jbyte *raw_stream = env->GetByteArrayElements(payload, 0);
@@ -220,7 +220,7 @@ Java_com_sh1r0_caffe_1android_1lib_CaffeTrain_Accumulate(JNIEnv *env, jobject th
 }
 
 JNIEXPORT jbyteArray JNICALL
-Java_com_sh1r0_caffe_1android_1lib_CaffeTrain_GetNewNet(JNIEnv *env, jobject thiz)
+Java_com_distro_1caffe_1demo_CaffeTrain_GetNewNet(JNIEnv *env, jobject thiz)
 {
   CaffeTrain *caffe_train = CaffeTrain::Get();
   char *payload = caffe_train->GetNewNet();
@@ -235,7 +235,7 @@ Java_com_sh1r0_caffe_1android_1lib_CaffeTrain_GetNewNet(JNIEnv *env, jobject thi
 }
 
 JNIEXPORT jint JNICALL
-Java_com_sh1r0_caffe_1android_1lib_CaffeTrain_UpdateWith(JNIEnv *env, jobject thiz, jbyteArray payload)
+Java_com_distro_1caffe_1demo_CaffeTrain_UpdateWith(JNIEnv *env, jobject thiz, jbyteArray payload)
 {
   CaffeTrain *caffe_train = CaffeTrain::Get();
   jbyte *raw_stream = env->GetByteArrayElements(payload, 0);
@@ -246,7 +246,7 @@ Java_com_sh1r0_caffe_1android_1lib_CaffeTrain_UpdateWith(JNIEnv *env, jobject th
 }
 
 JNIEXPORT void JNICALL
-Java_com_sh1r0_caffe_1android_1lib_CaffeTrain_SetNormalizeScale(JNIEnv *env, jobject thiz, jint scale)
+Java_com_distro_1caffe_1demo_CaffeTrain_SetNormalizeScale(JNIEnv *env, jobject thiz, jint scale)
 {
 
   CaffeTrain *caffe_train = CaffeTrain::Get();
@@ -255,7 +255,7 @@ Java_com_sh1r0_caffe_1android_1lib_CaffeTrain_SetNormalizeScale(JNIEnv *env, job
 
 
 JNIEXPORT jfloatArray JNICALL
-Java_com_sh1r0_caffe_1android_1lib_CaffeTrain_Get_Current_State(JNIEnv *env, jobject thiz)
+Java_com_distro_1caffe_1demo_CaffeTrain_Get_Current_State(JNIEnv *env, jobject thiz)
 {
   float example[5] = {1,2,3,4,5};
   jfloatArray result;
@@ -269,7 +269,7 @@ Java_com_sh1r0_caffe_1android_1lib_CaffeTrain_Get_Current_State(JNIEnv *env, job
 }
 
 JNIEXPORT jint JNICALL
-Java_com_sh1r0_caffe_1android_1lib_CaffeTrain_Set_Current_State(JNIEnv *env, jobject thiz, jbyteArray buf)
+Java_com_distro_1caffe_1demo_CaffeTrain_Set_Current_State(JNIEnv *env, jobject thiz, jbyteArray buf)
 {
   return 0;
 }
