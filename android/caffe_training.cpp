@@ -141,6 +141,11 @@ void CaffeTrain::SetNormalizeScale(int scale)
   this->solver->SetNormalizeScale(scale);
 }
 
+float CaffeTrain::getAcc()
+{
+  return this->solver->stored_accuracy;
+}
+
 void CaffeTrain::OneIter() {
   LOG(INFO) << "Solving ";
   // LOG(INFO) << "Learning Rate Policy: " << param_.lr_policy();

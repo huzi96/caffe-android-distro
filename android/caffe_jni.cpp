@@ -253,6 +253,14 @@ Java_com_distro_1caffe_1demo_CaffeTrain_SetNormalizeScale(JNIEnv *env, jobject t
   caffe_train->SetNormalizeScale((int) scale);
 }
 
+JNIEXPORT jfloat JNICALL
+Java_com_distro_1caffe_1demo_CaffeTrain_getAcc(JNIEnv *env, jobject thiz, jint scale)
+{
+
+  CaffeTrain *caffe_train = CaffeTrain::Get();
+  return (jfloat)caffe_train->getAcc();
+}
+
 
 JNIEXPORT jfloatArray JNICALL
 Java_com_distro_1caffe_1demo_CaffeTrain_Get_Current_State(JNIEnv *env, jobject thiz)

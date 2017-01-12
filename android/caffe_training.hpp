@@ -76,6 +76,7 @@ public:
   int Accumulate(std::vector<char> raw_vector);
   char *GetNewNet();
   void SetNormalizeScale(int scale);
+  float getAcc();
 
 private:
   static CaffeTrain *caffe_train_;

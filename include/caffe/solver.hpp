@@ -109,6 +109,8 @@ class Solver {
    */
   virtual inline const char* type() const { return ""; }
 
+  float stored_accuracy;
+
  protected:
   // Make and apply the update value for the current iteration.
   virtual void ApplyUpdate() = 0;
@@ -132,6 +134,7 @@ class Solver {
   vector<Callback*> callbacks_;
   vector<Dtype> losses_;
   Dtype smoothed_loss_;
+
 
   // The root solver that holds root nets (actually containing shared layers)
   // in data parallelism
