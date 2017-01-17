@@ -390,6 +390,7 @@ void Solver<Dtype>::Test(const int test_net_id) {
     loss /= param_.test_iter(test_net_id);
     LOG(INFO) << "Test loss: " << loss;
   }
+  float accuracy = 0;
   for (int i = 0; i < test_score.size(); ++i) {
     const int output_blob_index =
         test_net->output_blob_indices()[test_score_output_id[i]];
@@ -403,6 +404,8 @@ void Solver<Dtype>::Test(const int test_net_id) {
     }
     LOG(INFO) << "    Test net output #" << i << ": " << output_name << " = "
               << mean_score << loss_msg_stream.str();
+    if(i==0) accuracy = mean_score;
+    stored_accuracy = accuracy;
   }
 }
 
@@ -491,6 +494,45 @@ void Solver<Dtype>::UpdateSmoothedLoss(Dtype loss, int start_iter,
     losses_[idx] = loss;
   }
 }
+
+template <typename Dtype>
+int Solver<Dtype>::Step_stage_0(int &average_loss, const int start_iter)
+{
+  //not implemented
+  return -1;
+}
+
+template <typename Dtype>
+int Solver<Dtype>::Step_stage_1()
+{
+  //not implemented
+  return -1;
+}
+
+template <typename Dtype>
+int Solver<Dtype>::Half_iter(ostream *outstream) {
+  //not implemented
+  return 0;
+}
+
+template <typename Dtype>
+int Solver<Dtype>::Cont_iter(istream *instream) {
+  //not implemented
+  return 0;
+}
+
+template <typename Dtype>
+int Solver<Dtype>::Accumulate_diff(istream *instream)
+{return 0;}
+template <typename Dtype>
+int Solver<Dtype>::GetAccumulatedNet(ostream *outstream)
+{return 0;}
+template <typename Dtype>
+int Solver<Dtype>::SetNet(istream *instream)
+{return 0;}
+template <typename Dtype>
+void Solver<Dtype>::SetNormalizeScale(int scale)
+{}
 
 INSTANTIATE_CLASS(Solver);
 

@@ -7,6 +7,10 @@
 #include "caffe/net.hpp"
 #include "caffe/solver_factory.hpp"
 
+#include <iostream>
+using std::ostream;
+using std::istream;
+
 namespace caffe {
 
 /**
@@ -56,7 +60,18 @@ class Solver {
   // in a non-zero iter number to resume training for a pre-trained net.
   virtual void Solve(const char* resume_file = NULL);
   inline void Solve(const string resume_file) { Solve(resume_file.c_str()); }
-  void Step(int iters);
+  virtual void Step(int iters);
+  virtual int Step_stage_0(int &average_loss, const int start_iter);
+  virtual int Step_stage_1();
+
+  virtual int Half_iter(ostream *outstream);
+  virtual int Cont_iter(istream *instream);
+
+  virtual int Accumulate_diff(istream *instream);
+  virtual int GetAccumulatedNet(ostream *outstream);
+  virtual int SetNet(istream *instream);
+  virtual void SetNormalizeScale(int scale);
+
   // The Restore method simply dispatches to one of the
   // RestoreSolverStateFrom___ protected methods. You should implement these
   // methods to restore the state from the appropriate snapshot type.
@@ -76,7 +91,7 @@ class Solver {
 
   // Invoked at specific points during an iteration
   class Callback {
-   protected:
+   public:
     virtual void on_start() = 0;
     virtual void on_gradients_ready() = 0;
 
@@ -93,6 +108,8 @@ class Solver {
    * @brief Returns the solver type.
    */
   virtual inline const char* type() const { return ""; }
+
+  float stored_accuracy;
 
  protected:
   // Make and apply the update value for the current iteration.
@@ -117,6 +134,7 @@ class Solver {
   vector<Callback*> callbacks_;
   vector<Dtype> losses_;
   Dtype smoothed_loss_;
+
 
   // The root solver that holds root nets (actually containing shared layers)
   // in data parallelism
